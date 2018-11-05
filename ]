@@ -1,0 +1,62 @@
+#include "maxCommands.h"
+
+#define cs 6
+#define clk 5
+#define dataIn 3
+
+
+void setup() {
+	Serial.begin(9600);
+
+	Serial.println("Starting up \n\n\n");
+
+	pinMode(cs, OUTPUT);
+	pinMode(clk, OUTPUT);
+	pinMode(dataIn, OUTPUT);
+
+
+	digitalWrite(cs, HIGH);
+	
+	writeCommand(maxSHUTDOWN_INV, 1);
+
+	writeCommand(maxINTENSITY, 0x00);
+
+
+}
+
+void loop() {
+
+	for ( int i = 0; i < 255; i++) {
+		writeCommand(maxDIGIT_1, i);
+
+		delay(200);
+	}
+
+}
+
+
+void writeCommand(uint8_t addr, uint8_t data) {
+	uint16_t byteToWrite = addr << 8 | data;
+
+	//Set Chip select low
+	digitalWrite(cs, LOW);
+
+	Serial.print("Writing: ");
+	for (int i = 0; i < 16; i++) {
+		bool bitToWrite = ( byteToWrite & 1 << 15 - i ) > 0;
+		Serial.print( bitToWrite );
+		
+		//Write Data
+		digitalWrite(dataIn, bitToWrite);
+		delayMicroseconds(10);	
+
+		//Write clock
+		digitalWrite(clk, HIGH);
+
+		//Wait and go low
+		delayMicroseconds(100);
+		digitalWrite(clk, LOW);
+	}
+	digitalWrite(cs, HIGH);
+	Serial.println();
+}
