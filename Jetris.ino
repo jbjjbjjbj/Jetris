@@ -10,7 +10,8 @@
 #define setDisplay(d) (curDisplay = d)
 
 //Use the drawDot function to draw
-uint8_t screenBuffer[16];
+uint8_t buttonLayer[16];
+uint8_t topLayer[16];
 
 int curDisplay = 0;
 
@@ -40,36 +41,17 @@ void setup() {
 //       GAME LOGIC        //
 /////////////////////////////
 
-int ballX = 4;
-int ballY = 0;
 
-int ballXv = 1;
-int ballYv = 1;
-
-int last = 0;
-
-Sprite *logo = blocks[4];
 
 void loop() {
 	delay(100);
 	
-	if(ballX + ballXv + logo->width > 8 || ballX + ballXv < 0){
-		ballXv = -ballXv;
-		logo = blocks[random(7)];
-	}
-	if(ballY + ballYv + logo->height > 16 || ballY + ballYv < 0){
-		ballYv = -ballYv;
-		logo = blocks[random(7)];
-	}
-
-	ballX += ballXv;
-	ballY += ballYv;
-	
 	//Clear screen
-	drawRegion(0xFF, 0xFFFF, false);
+	drawRegion(topLayer, 0xFF, 0xFFFF, false);
+
 
 	//Draw ball
-	drawSprite(ballX, ballY, logo);
+	drawSprite(topLayer, 0, 5, &checker);
 	
 	renderAll();
 	//renderToSerial();
@@ -79,16 +61,16 @@ void loop() {
 
 void renderAll(){
 	setDisplay(0);
-	render(screenBuffer);
+	render(0);
 	setDisplay(1);
-	render(screenBuffer + 8);
+	render(8);
 }
 
 void renderToSerial() {
 	Serial.write(0x33); Serial.println("[2J");
 	for(int i = 0; i < 16; i++) {
 		for(int b = 0; b < 8; b++) {
-			Serial.print( (  screenBuffer[i] & ( 1 << 7 - b ) ) > 0 );
+			Serial.print( (  buttonLayer[i] & ( 1 << 7 - b ) ) > 0 );
 		}
 		Serial.println();
 	}
@@ -118,7 +100,7 @@ void initDisplay() {
 
 //Draw a region, where mask specifies where to draw.
 //	xMask = 0b00111100, yMask = 0b01111110 will draw a small 4x6 box
-void drawSprite(uint8_t x, uint8_t y, Sprite* sprite) {
+void drawSprite(uint8_t layer[], uint8_t x, uint8_t y, Sprite* sprite) {
 	//Check if in range
 	if (x + sprite->width - 1 > 7 || y + sprite->height - 1> 15 )
 		return;
@@ -127,40 +109,28 @@ void drawSprite(uint8_t x, uint8_t y, Sprite* sprite) {
 	uint8_t xMask = (uint8_t)(~( (1 << ( 8 - sprite->width ) ) -1 )) >> x;
 	uint16_t yMask =  ( (1 <<     sprite->height    ) -1 ) << y;
 
-	drawRegion(xMask, yMask, false);
+	drawRegion(layer, xMask, yMask, false);
 
 
 	for ( int i = y; i < sprite->height + y; i++) {
 		//Calculate bits
-		uint8_t row = screenBuffer[i];
+		uint8_t row = layer[i];
 		row |= sprite->buff[i - y] >> x;
 		
-		screenBuffer[i] = row;
+		layer[i] = row;
 
 	}
 	
 }
 
-void drawDot(uint8_t x, uint8_t y, bool state) {
-	//Check if in range
-	if (x > 7 || y > 16) 
-		return;
-	//Generate masks
-	uint8_t xMask = 1 << x;
-	uint8_t yMask = 1 << y;
-
-	//Draw the bit
-	drawRegion(xMask, yMask, state);
-}
-
-void drawRegion(uint8_t xMask, uint16_t yMask, bool state) {
+void drawRegion(uint8_t layer[], uint8_t xMask, uint16_t yMask, bool state) {
 	for (int i = 0; i < 16; i++ ) {
 		//If y index not in mask, go to next
 		if (! ( yMask & 1 << i ) )
 			continue;
 
 		//Flip the bits
-		uint8_t row = screenBuffer[i];
+		uint8_t row = layer[i];
 		if ( state ) {
 			//Write 1 where on the 1's places in xMask
 			row |= xMask;
@@ -168,14 +138,14 @@ void drawRegion(uint8_t xMask, uint16_t yMask, bool state) {
 			//Write 0. ~ means bitwise NOT
 			row &= ~( xMask );
 		}
-		screenBuffer[i] = row;
+		layer[i] = row;
 	}
 }
 
-void render(uint8_t buffer[]) {
+void render(int where) {
 
-	for(int i = 0; i < 8; i++ ) {
-		writeCommand(maxDIGIT_0 + i, buffer[i]);
+	for(int i = where; i < (where + 8); i++ ) {
+		writeCommand(maxDIGIT_0 + i - where, buttonLayer[i]);
 	}
 	
 	//Shift everything throught
