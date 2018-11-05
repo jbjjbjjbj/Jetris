@@ -48,16 +48,18 @@ int ballYv = 1;
 
 int last = 0;
 
-Sprite *logo = &ball;
+Sprite *logo = blocks[4];
 
 void loop() {
 	delay(100);
-
+	
 	if(ballX + ballXv + logo->width > 8 || ballX + ballXv < 0){
 		ballXv = -ballXv;
+		logo = blocks[random(7)];
 	}
 	if(ballY + ballYv + logo->height > 16 || ballY + ballYv < 0){
 		ballYv = -ballYv;
+		logo = blocks[random(7)];
 	}
 
 	ballX += ballXv;
@@ -107,7 +109,7 @@ void initDisplay() {
 	writeCommand(maxSHUTDOWN_INV, 1);
 
 	//Darker please
-	writeCommand(maxINTENSITY, 0x00);
+	writeCommand(maxINTENSITY, 0x01);
 	
 	//Activate all lines
 	writeCommand(maxSCAN_LIMIT, 0x07);
@@ -171,8 +173,8 @@ void drawRegion(uint8_t xMask, uint16_t yMask, bool state) {
 }
 
 void render(uint8_t buffer[]) {
-	for(int i = 0; i < 8; i++ ) {
 
+	for(int i = 0; i < 8; i++ ) {
 		writeCommand(maxDIGIT_0 + i, buffer[i]);
 	}
 	

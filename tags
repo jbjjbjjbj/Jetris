@@ -6,6 +6,7 @@
 !_TAG_PROGRAM_VERSION	5.8	//
 MaxCommands	MaxCommands.h	2;"	d
 Sprite	sprites.h	/^struct Sprite {$/;"	s
+ball	sprites.h	/^const Sprite ball = {$/;"	v
 buff	sprites.h	/^	uint8_t buff[8];$/;"	m	struct:Sprite
 checker	sprites.h	/^const Sprite checker = {$/;"	v
 height	sprites.h	/^	uint8_t height;$/;"	m	struct:Sprite
@@ -22,6 +23,7 @@ maxINTENSITY	MaxCommands.h	6;"	d
 maxSCAN_LIMIT	MaxCommands.h	16;"	d
 maxSHUTDOWN_INV	MaxCommands.h	4;"	d
 maxTEST	MaxCommands.h	5;"	d
+miniSmiley	sprites.h	/^const Sprite miniSmiley = {$/;"	v
 smiley	sprites.h	/^const Sprite smiley = { $/;"	v
 sprites	sprites.h	2;"	d
 width	sprites.h	/^	uint8_t width;$/;"	m	struct:Sprite
