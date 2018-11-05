@@ -1,5 +1,6 @@
 // THings that miss
 //	Functions that return something
+//  Make more safety
 
 #include "sprites.h"
 #include "MaxCommands.h"
@@ -8,6 +9,10 @@
 #define cs       6
 #define dataIn 	 3
 #define setDisplay(d) (curDisplay = d)
+#define leftPin     2
+#define rightPin    4
+#define dropPin  11
+#define clickTime 200
 
 //Use the drawDot function to draw
 uint8_t buttonLayer[16];
@@ -21,10 +26,18 @@ void setup() {
 
 	Serial.println("Starting up \n\n\n");
 
+	randomSeed(analogRead(0));
+
 	//Init pins
 	pinMode(cs,  OUTPUT);
 	pinMode(clk, OUTPUT);
 	pinMode(dataIn, OUTPUT);
+	pinMode(leftPin, INPUT_PULLUP);
+	pinMode(rightPin, INPUT_PULLUP);
+	pinMode(dropPin, INPUT_PULLUP);
+
+	//ButtonInterrupt
+	//attachInterrupt(digitalPinToInterrupt(left), buttonHandle, FALLING);
 
 	//Setup displays
 	setDisplay(0);
@@ -33,7 +46,7 @@ void setup() {
 	setDisplay(1);
 	initDisplay();
 	
-	
+	initGame();	
 
 }
 
@@ -41,22 +54,87 @@ void setup() {
 //       GAME LOGIC        //
 /////////////////////////////
 
+Sprite *block;
 
+int xPos;
+int yPos;
+
+
+long loopTime;
+
+void initGame() {
+	initBlock();
+}
 
 void loop() {
-	delay(100);
 	
+	handleButtons();
+
+	if(millis() - loopTime < 500) 
+		return;
+	
+	//Move
+	if(checkCollision(0, 1)) {
+		drawSprite(buttonLayer, xPos, yPos, block);	
+		renderAll();
+		initBlock();
+	}else{
+		moveBlock(0, 1);
+	}
+
+	loopTime = millis();
+
+}
+
+void initBlock(){
+	xPos = 0;
+	yPos = 0;
+
+	block = blocks[random(7)];
+}
+
+void moveBlock(int xMove, int yMove) {
+	xPos += xMove;
+	yPos += yMove;
+
 	//Clear screen
 	drawRegion(topLayer, 0xFF, 0xFFFF, false);
 
-
 	//Draw ball
-	drawSprite(topLayer, 0, 5, &checker);
-	
+	drawSprite(topLayer, xPos, yPos, block);
+
+	//Render
 	renderAll();
-	//renderToSerial();
 
+}
 
+//Checks if input and button layer have bits in common, or if a block hits button. Returns true if collision
+int checkCollision(int xMove, int yMove) {
+	//Newolute position on map
+	int yNew = yPos + yMove;
+	int xNew = xPos + xMove;
+
+	for(int i = 0; i < block->height; i++) {
+		if(( block->buff[i] >> xNew) & buttonLayer[i + yNew])
+			return 1;
+	}
+
+	//Check if out of bounds
+	if(xNew + block->width > 8 || xNew < 0 || yNew + block->height > 16) 
+		return 1;
+
+	return 0;
+}
+
+void dropBlock() {
+	//Move down until it hits something
+	int count = 0;
+	while( !checkCollision(0, 1) ) {
+		moveBlock(0, 1);
+
+	}
+
+	drawSprite(buttonLayer, xPos, yPos, block);
 }
 
 void renderAll(){
@@ -77,6 +155,44 @@ void renderToSerial() {
 }
 
 /////////////////////////////
+//   Control Handling      //
+/////////////////////////////
+
+int leftLast, rightLast, dropLast;
+
+void handleButtons() {
+	//Read from switch
+	int leftState = !digitalRead(leftPin);
+	int rightState = !digitalRead(rightPin);
+	int dropState = !digitalRead(dropPin);
+	
+	//Check if last click was over 100 ms ago
+	if(millis() - leftLast > clickTime && leftState) {
+		leftLast = millis();
+
+		//Move 
+		if( !checkCollision(1, 0) ) {
+			moveBlock(1, 0);
+		}
+	}
+
+	if(millis() - rightLast > clickTime && rightState) {
+		rightLast = millis();
+		//Move 
+		if( !checkCollision(-1, 0) ) {
+			moveBlock(-1, 0);
+		}
+	}
+
+	if(millis() - dropLast > clickTime && dropState) {
+		dropLast = millis();
+
+		dropBlock();
+
+	}
+}
+
+/////////////////////////////
 // Screendrawing routines  //
 /////////////////////////////
 
@@ -91,7 +207,7 @@ void initDisplay() {
 	writeCommand(maxSHUTDOWN_INV, 1);
 
 	//Darker please
-	writeCommand(maxINTENSITY, 0x01);
+	writeCommand(maxINTENSITY, 0x00);
 	
 	//Activate all lines
 	writeCommand(maxSCAN_LIMIT, 0x07);
@@ -105,13 +221,6 @@ void drawSprite(uint8_t layer[], uint8_t x, uint8_t y, Sprite* sprite) {
 	if (x + sprite->width - 1 > 7 || y + sprite->height - 1> 15 )
 		return;
 	
-	//Clear out drawing area
-	uint8_t xMask = (uint8_t)(~( (1 << ( 8 - sprite->width ) ) -1 )) >> x;
-	uint16_t yMask =  ( (1 <<     sprite->height    ) -1 ) << y;
-
-	drawRegion(layer, xMask, yMask, false);
-
-
 	for ( int i = y; i < sprite->height + y; i++) {
 		//Calculate bits
 		uint8_t row = layer[i];
@@ -145,7 +254,7 @@ void drawRegion(uint8_t layer[], uint8_t xMask, uint16_t yMask, bool state) {
 void render(int where) {
 
 	for(int i = where; i < (where + 8); i++ ) {
-		writeCommand(maxDIGIT_0 + i - where, buttonLayer[i]);
+		writeCommand(maxDIGIT_0 + i - where, buttonLayer[i] | topLayer[i]);
 	}
 	
 	//Shift everything throught
