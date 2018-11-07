@@ -7,9 +7,13 @@
 MaxCommands	MaxCommands.h	2;"	d
 Sprite	sprites.h	/^struct Sprite {$/;"	s
 ball	sprites.h	/^const Sprite ball = {$/;"	v
+blocks	sprites.h	/^const Sprite *blocks[] = { &iBlock, &oBlock, &tBlock, &sBlock, &zBlock, &jBlock, &lBlock };$/;"	v
 buff	sprites.h	/^	uint8_t buff[8];$/;"	m	struct:Sprite
 checker	sprites.h	/^const Sprite checker = {$/;"	v
 height	sprites.h	/^	uint8_t height;$/;"	m	struct:Sprite
+iBlock	sprites.h	/^const Sprite iBlock = {$/;"	v
+jBlock	sprites.h	/^const Sprite jBlock = {$/;"	v
+lBlock	sprites.h	/^const Sprite lBlock = {$/;"	v
 maxDECODE_MODE	MaxCommands.h	15;"	d
 maxDIGIT_0	MaxCommands.h	7;"	d
 maxDIGIT_1	MaxCommands.h	8;"	d
@@ -24,6 +28,12 @@ maxSCAN_LIMIT	MaxCommands.h	16;"	d
 maxSHUTDOWN_INV	MaxCommands.h	4;"	d
 maxTEST	MaxCommands.h	5;"	d
 miniSmiley	sprites.h	/^const Sprite miniSmiley = {$/;"	v
+oBlock	sprites.h	/^const Sprite oBlock = {$/;"	v
+sBlock	sprites.h	/^const Sprite sBlock = {$/;"	v
 smiley	sprites.h	/^const Sprite smiley = { $/;"	v
 sprites	sprites.h	2;"	d
+tBlock	sprites.h	/^const Sprite tBlock = {$/;"	v
 width	sprites.h	/^	uint8_t width;$/;"	m	struct:Sprite
+xOff	sprites.h	/^	uint8_t xOff;$/;"	m	struct:Sprite
+yOff	sprites.h	/^	uint8_t yOff;$/;"	m	struct:Sprite
+zBlock	sprites.h	/^const Sprite zBlock = {$/;"	v
