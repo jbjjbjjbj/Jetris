@@ -12,6 +12,7 @@
 #define leftPin     2
 #define rightPin    4
 #define dropPin  11
+#define rotatePin 10
 #define clickTime 200
 
 //Use the drawDot function to draw
@@ -35,6 +36,7 @@ void setup() {
 	pinMode(leftPin, INPUT_PULLUP);
 	pinMode(rightPin, INPUT_PULLUP);
 	pinMode(dropPin, INPUT_PULLUP);
+	pinMode(rotatePin, INPUT_PULLUP);
 
 	//ButtonInterrupt
 	//attachInterrupt(digitalPinToInterrupt(left), buttonHandle, FALLING);
@@ -45,6 +47,8 @@ void setup() {
 
 	setDisplay(1);
 	initDisplay();
+
+	initSprites();
 	
 	initGame();	
 
@@ -76,6 +80,7 @@ void loop() {
 	//Move
 	if(checkCollision(0, 1)) {
 		drawSprite(buttonLayer, xPos, yPos, block);	
+		handleFullRows(0);
 		renderAll();
 		initBlock();
 	}else{
@@ -126,12 +131,28 @@ int checkCollision(int xMove, int yMove) {
 	return 0;
 }
 
+void rotateBlock() {
+	Serial.println("Rotate");
+
+	//If next block exist, switch to that
+	if( block->rotateNext ) {
+		Serial.println((uint16_t)block);
+		Serial.println((uint16_t)block->rotateNext);
+
+		block = block->rotateNext;
+		Serial.println((uint16_t)block);
+	}
+
+	//And render
+	moveBlock(0, 0);
+}
+
 void dropBlock() {
 	//Move down until it hits something
 	int count = 0;
 	while( !checkCollision(0, 1) ) {
 		moveBlock(0, 1);
-
+		delay(10);
 	}
 
 	drawSprite(buttonLayer, xPos, yPos, block);
@@ -142,6 +163,18 @@ void renderAll(){
 	render(0);
 	setDisplay(1);
 	render(8);
+}
+
+void handleFullRows(int start) {
+	for(int i = start; i < 16; i++ ) {
+		if(buttonLayer[15 - i] == 0xFF) {
+			for(int j = i; j < 16; j++) {
+				buttonLayer[15 - j] = buttonLayer[14 - j];
+			}
+			handleFullRows(i);
+			return;
+		}
+	}
 }
 
 void renderToSerial() {
@@ -158,13 +191,14 @@ void renderToSerial() {
 //   Control Handling      //
 /////////////////////////////
 
-int leftLast, rightLast, dropLast;
+unsigned long leftLast, rightLast, dropLast, rotateLast;
 
 void handleButtons() {
 	//Read from switch
 	int leftState = !digitalRead(leftPin);
 	int rightState = !digitalRead(rightPin);
 	int dropState = !digitalRead(dropPin);
+	int rotateState = !digitalRead(rotatePin);
 	
 	//Check if last click was over 100 ms ago
 	if(millis() - leftLast > clickTime && leftState) {
@@ -188,7 +222,12 @@ void handleButtons() {
 		dropLast = millis();
 
 		dropBlock();
+	}
 
+	if(millis() - rotateLast > clickTime+100 && rotateState) {
+		rotateLast = millis();
+
+		rotateBlock();
 	}
 }
 
@@ -251,15 +290,26 @@ void drawRegion(uint8_t layer[], uint8_t xMask, uint16_t yMask, bool state) {
 	}
 }
 
+unsigned long reRenderLast;
+
 void render(int where) {
 
+	static uint8_t onScreen[16];
+
+	bool reRender = (millis() - reRenderLast ) > 1000;
+
 	for(int i = where; i < (where + 8); i++ ) {
+		uint8_t toWrite = buttonLayer[i] | topLayer[i];
+		if(onScreen[i] == toWrite && !reRender) 
+			continue;
+
 		writeCommand(maxDIGIT_0 + i - where, buttonLayer[i] | topLayer[i]);
+
+		onScreen[i] = toWrite;
 	}
-	
-	//Shift everything throught
-	for( int i = 0; i < curDisplay; i++) {
-		writeCommand(0, 0);
+
+	if(reRender) {
+		reRenderLast = millis();
 	}
 
 }

@@ -6,10 +6,21 @@
 !_TAG_PROGRAM_VERSION	5.8	//
 MaxCommands	MaxCommands.h	2;"	d
 Sprite	sprites.h	/^struct Sprite {$/;"	s
-ball	sprites.h	/^const Sprite ball = {$/;"	v
-buff	sprites.h	/^	uint8_t buff[8];$/;"	m	struct:Sprite
-checker	sprites.h	/^const Sprite checker = {$/;"	v
+ball	sprites.h	/^struct Sprite ball = {$/;"	v	typeref:struct:Sprite
+blocks	sprites.h	/^struct Sprite *blocks[] = { &iBlock, &oBlock, &tBlock, &sBlock, &zBlock, &jBlock, &lBlock };$/;"	v	typeref:struct:Sprite
+buff	sprites.h	/^	uint8_t buff[4];$/;"	m	struct:Sprite
 height	sprites.h	/^	uint8_t height;$/;"	m	struct:Sprite
+iBlock	sprites.h	/^struct Sprite iBlock = {$/;"	v	typeref:struct:Sprite
+iBlockR	sprites.h	/^struct Sprite iBlockR = {$/;"	v	typeref:struct:Sprite
+initSprites	sprites.c	/^void initSprites() {$/;"	f
+jBlock	sprites.h	/^struct Sprite jBlock = {$/;"	v	typeref:struct:Sprite
+jBlockD	sprites.h	/^struct Sprite jBlockD = {$/;"	v	typeref:struct:Sprite
+jBlockL	sprites.h	/^struct Sprite jBlockL = {$/;"	v	typeref:struct:Sprite
+jBlockR	sprites.h	/^struct Sprite jBlockR = {$/;"	v	typeref:struct:Sprite
+lBlock	sprites.h	/^struct Sprite lBlock = {$/;"	v	typeref:struct:Sprite
+lBlockD	sprites.h	/^struct Sprite lBlockD = {$/;"	v	typeref:struct:Sprite
+lBlockL	sprites.h	/^struct Sprite lBlockL = {$/;"	v	typeref:struct:Sprite
+lBlockR	sprites.h	/^struct Sprite lBlockR = {$/;"	v	typeref:struct:Sprite
 maxDECODE_MODE	MaxCommands.h	15;"	d
 maxDIGIT_0	MaxCommands.h	7;"	d
 maxDIGIT_1	MaxCommands.h	8;"	d
@@ -23,7 +34,15 @@ maxINTENSITY	MaxCommands.h	6;"	d
 maxSCAN_LIMIT	MaxCommands.h	16;"	d
 maxSHUTDOWN_INV	MaxCommands.h	4;"	d
 maxTEST	MaxCommands.h	5;"	d
-miniSmiley	sprites.h	/^const Sprite miniSmiley = {$/;"	v
-smiley	sprites.h	/^const Sprite smiley = { $/;"	v
+oBlock	sprites.h	/^struct Sprite oBlock = {$/;"	v	typeref:struct:Sprite
+rotateNext	sprites.h	/^	struct Sprite *rotateNext;$/;"	m	struct:Sprite	typeref:struct:Sprite::Sprite
+sBlock	sprites.h	/^struct Sprite sBlock = {$/;"	v	typeref:struct:Sprite
+sBlockR	sprites.h	/^struct Sprite sBlockR = {$/;"	v	typeref:struct:Sprite
 sprites	sprites.h	2;"	d
+tBlock	sprites.h	/^struct Sprite tBlock = {$/;"	v	typeref:struct:Sprite
+tBlockD	sprites.h	/^struct Sprite tBlockD = {$/;"	v	typeref:struct:Sprite
+tBlockL	sprites.h	/^struct Sprite tBlockL = {$/;"	v	typeref:struct:Sprite
+tBlockR	sprites.h	/^struct Sprite tBlockR = {$/;"	v	typeref:struct:Sprite
 width	sprites.h	/^	uint8_t width;$/;"	m	struct:Sprite
+zBlock	sprites.h	/^struct Sprite zBlock = {$/;"	v	typeref:struct:Sprite
+zBlockR	sprites.h	/^struct Sprite zBlockR = {$/;"	v	typeref:struct:Sprite
