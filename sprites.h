@@ -1,158 +1,192 @@
 #ifndef sprites
 #define sprites
 
+#include <stdint.h>
+#include <stddef.h>
+
 struct Sprite {
-	uint8_t buff[8];
+	uint8_t buff[4];
 	uint8_t width;
 	uint8_t height;
-	uint8_t xOff;
-	uint8_t yOff;
+	struct Sprite *rotateNext;
 };
 
-const Sprite smiley = { 
-	{ 
-		0b11001100,
-		0b11001100,
-		0b00000000,
-		0b00110000,
-		0b10000000,
-		0b11111100,
-		0b00000000,
-		0b00000000
-	}, 6, 6, 0, 0
-};
 
-const Sprite checker = {
-	{
-		0b10101010,
-		0b01010101,
-		0b10101010,
-		0b01010101,
-		0b10101010,
-		0b01010101,
-		0b10101010,
-		0b01010101
-	}, 8, 8, 0, 0
-};
 
-const Sprite ball = {
+struct Sprite ball = {
 	{
 		0b11100000,
 		0b10100000,
 		0b11100000,
 		0b00000000,
-		0b00000000,
-		0b00000000,
-		0b00000000,
-		0b00000000
-	}, 3, 3, 0, 0
+	}, 3, 3, NULL
 };
 
-const Sprite miniSmiley = {
+
+struct Sprite iBlock = {
 	{
-		0b01010000,
-		0b10000000,
 		0b11110000,
 		0b00000000,
 		0b00000000,
 		0b00000000,
-		0b00000000,
-		0b00000000
-	}, 4, 3, 0, 0
+	}, 4, 1, NULL
 };
-
-
-const Sprite iBlock = {
+struct Sprite iBlockR = {
 	{
-		0b00000000,
-		0b00000000,
-		0b00000000,
-		0b00011110,
-		0b00000000,
-		0b00000000,
-		0b00000000,
-		0b00000000
-	}, 4, 1, 3, 3
+		0b10000000,
+		0b10000000,
+		0b10000000,
+		0b10000000,
+	}, 1, 4, NULL
 };
 
-const Sprite oBlock = {
+
+struct Sprite oBlock = {
 	{
 		0b11000000,
 		0b11000000,
 		0b00000000,
 		0b00000000,
-		0b00000000,
-		0b00000000,
-		0b00000000,
-		0b00000000
-	}, 2, 2, 0, 0
+	}, 2, 2, NULL
 };
 
-const Sprite tBlock = {
+struct Sprite tBlock = {
 	{
+		0b01000000,
+		0b11100000,
 		0b00000000,
 		0b00000000,
-		0b00000000,
-		0b00001000,
-		0b00011100,
-		0b00000000,
-		0b00000000,
-		0b00000000
-	}, 3, 2, 3, 3
+	}, 3, 2, NULL
 };
-
-const Sprite sBlock = {
+struct Sprite tBlockR = {
 	{
+		0b10000000,
+		0b11000000,
+		0b10000000,
 		0b00000000,
-		0b00000000,
-		0b00000000,
-		0b00001100,
-		0b00011000,
-		0b00000000,
-		0b00000000,
-		0b00000000
-	}, 3, 2, 3, 3
+	}, 2, 3, NULL
 };
-
-const Sprite zBlock = {
+struct Sprite tBlockD = {
 	{
+		0b11100000,
+		0b01000000,
 		0b00000000,
 		0b00000000,
-		0b00000000,
-		0b00011000,
-		0b00001100,
-		0b00000000,
-		0b00000000,
-		0b00000000
-	}, 3, 2, 3, 3
+	}, 3, 2, NULL
 };
-
-const Sprite jBlock = {
+struct Sprite tBlockL = {
 	{
+		0b01000000,
+		0b11000000,
+		0b01000000,
 		0b00000000,
-		0b00000000,
-		0b00000000,
-		0b00010000,
-		0b00011100,
-		0b00000000,
-		0b00000000,
-		0b00000000
-	}, 3, 2, 3, 3
+	}, 2, 3, NULL
 };
 
-const Sprite lBlock = {
+
+struct Sprite sBlock = {
 	{
+		0b01100000,
+		0b11000000,
 		0b00000000,
 		0b00000000,
+	}, 3, 2, NULL
+};
+struct Sprite sBlockR = {
+	{
+		0b10000000,
+		0b11000000,
+		0b01000000,
 		0b00000000,
-		0b00000100,
-		0b00011100,
-		0b00000000,
-		0b00000000,
-		0b00000000
-	}, 3, 2, 2, 2
+	}, 2, 3, NULL
 };
 
-const Sprite *blocks[] = { &iBlock, &oBlock, &tBlock, &sBlock, &zBlock, &jBlock, &lBlock };
+struct Sprite zBlock = {
+	{
+		0b11000000,
+		0b01100000,
+		0b00000000,
+		0b00000000,
+	}, 3, 2, NULL
+};
+struct Sprite zBlockR = {
+	{
+		0b01000000,
+		0b11000000,
+		0b10000000,
+		0b00000000,
+	}, 2, 3, NULL
+};
+
+
+// JBLOCk
+struct Sprite jBlock = {
+	{
+		0b10000000,
+		0b11100000,
+		0b00000000,
+		0b00000000,
+	}, 3, 2, NULL
+};
+struct Sprite jBlockR = {
+	{
+		0b11000000,
+		0b10000000,
+		0b10000000,
+		0b00000000,
+	}, 2, 3, NULL
+};
+struct Sprite jBlockD = {
+	{
+		0b11100000,
+		0b00100000,
+		0b00000000,
+		0b00000000,
+	}, 3, 2, NULL
+};
+struct Sprite jBlockL = {
+	{
+		0b01000000,
+		0b01000000,
+		0b11000000,
+		0b00000000,
+	}, 2, 3, NULL
+};
+
+//Lblock
+struct Sprite lBlock = {
+	{
+		0b00100000,
+		0b11100000,
+		0b00000000,
+		0b00000000,
+	}, 3, 2, NULL
+};
+struct Sprite lBlockR = {
+	{
+		0b10000000,
+		0b10000000,
+		0b11000000,
+		0b00000000,
+	}, 2, 3, NULL
+};
+struct Sprite lBlockD = {
+	{
+		0b11100000,
+		0b10000000,
+		0b00000000,
+		0b00000000,
+	}, 3, 2, NULL
+};
+struct Sprite lBlockL = {
+	{
+		0b11000000,
+		0b01000000,
+		0b01000000,
+		0b00000000,
+	}, 3, 2, NULL
+};
+
+struct Sprite *blocks[] = { &iBlock, &oBlock, &tBlock, &sBlock, &zBlock, &jBlock, &lBlock };
 
 #endif

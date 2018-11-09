@@ -1,7 +1,6 @@
 // THings that miss
 //	Functions that return something
 //  Make more safety
-//  Malloc etc.
 
 #include "sprites.h"
 #include "MaxCommands.h"
@@ -48,6 +47,8 @@ void setup() {
 
 	setDisplay(1);
 	initDisplay();
+
+	initSprites();
 	
 	initGame();	
 
@@ -57,13 +58,13 @@ void setup() {
 //       GAME LOGIC        //
 /////////////////////////////
 
-struct Sprite block;
+Sprite *block;
 
 int xPos;
 int yPos;
 
 
-unsigned long loopTime;
+long loopTime;
 
 void initGame() {
 	initBlock();
@@ -78,7 +79,8 @@ void loop() {
 	
 	//Move
 	if(checkCollision(0, 1)) {
-		drawSprite(buttonLayer, xPos, yPos, &block);	
+		drawSprite(buttonLayer, xPos, yPos, block);	
+		handleFullRows(0);
 		renderAll();
 		initBlock();
 	}else{
@@ -93,7 +95,7 @@ void initBlock(){
 	xPos = 0;
 	yPos = 0;
 
-	block = *blocks[random(7)];
+	block = blocks[random(7)];
 }
 
 void moveBlock(int xMove, int yMove) {
@@ -104,7 +106,7 @@ void moveBlock(int xMove, int yMove) {
 	drawRegion(topLayer, 0xFF, 0xFFFF, false);
 
 	//Draw ball
-	drawSprite(topLayer, xPos, yPos, &block);
+	drawSprite(topLayer, xPos, yPos, block);
 
 	//Render
 	renderAll();
@@ -117,16 +119,32 @@ int checkCollision(int xMove, int yMove) {
 	int yNew = yPos + yMove;
 	int xNew = xPos + xMove;
 
-	for(int i = 0; i < block.height; i++) {
-		if(( block.buff[i + block.yOff] >> xNew - block.xOff ) & buttonLayer[i + yNew])
+	for(int i = 0; i < block->height; i++) {
+		if(( block->buff[i] >> xNew) & buttonLayer[i + yNew])
 			return 1;
 	}
 
 	//Check if out of bounds
-	if(xNew + block.width > 8 || xNew < 0 || yNew + block.height > 16) 
+	if(xNew + block->width > 8 || xNew < 0 || yNew + block->height > 16) 
 		return 1;
 
 	return 0;
+}
+
+void rotateBlock() {
+	Serial.println("Rotate");
+
+	//If next block exist, switch to that
+	if( block->rotateNext ) {
+		Serial.println((uint16_t)block);
+		Serial.println((uint16_t)block->rotateNext);
+
+		block = block->rotateNext;
+		Serial.println((uint16_t)block);
+	}
+
+	//And render
+	moveBlock(0, 0);
 }
 
 void dropBlock() {
@@ -134,49 +152,10 @@ void dropBlock() {
 	int count = 0;
 	while( !checkCollision(0, 1) ) {
 		moveBlock(0, 1);
-
+		delay(10);
 	}
 
-	drawSprite(buttonLayer, xPos, yPos, &block);
-}
-
-//Rotate sprite with the clock
-void rotateSprite(struct Sprite *sprite, int count) {
-	uint8_t oldBuffer[8];
-
-	Serial.println(oldBuffer[0]);
-	Serial.println(oldBuffer[2]);
-	Serial.println(sprite->buff[0]);
-	Serial.println(sprite->buff[2]);
-
-	//VULN TODO
-	memcpy(oldBuffer, sprite->buff, sizeof(oldBuffer) );
-
-	Serial.println("Took copy");
-	Serial.println(oldBuffer[0]);
-	Serial.println(sprite->buff[0]);
-
-	for(int i = 0; i < 8; i++) {
-		sprite->buff[i] = 0;
-	}
-
-	//Cannot explain how this works in text TODO
-	for(int i = 0; i < 8; i++) {
-		uint8_t row = oldBuffer[7 - i];
-		for(int j = 0; j < 8; j++) {
-			sprite->buff[j] |= row & ( 1 << i );
-		}
-	}
-
-	Serial.println("Rotated array");
-	
-	//Switch height/width
-	uint8_t temp = sprite->height;
-	sprite->height = sprite->width;
-	sprite->width = temp;
-
-	Serial.println("Changed dimensions");
-
+	drawSprite(buttonLayer, xPos, yPos, block);
 }
 
 void renderAll(){
@@ -184,6 +163,18 @@ void renderAll(){
 	render(0);
 	setDisplay(1);
 	render(8);
+}
+
+void handleFullRows(int start) {
+	for(int i = start; i < 16; i++ ) {
+		if(buttonLayer[15 - i] == 0xFF) {
+			for(int j = i; j < 16; j++) {
+				buttonLayer[15 - j] = buttonLayer[14 - j];
+			}
+			handleFullRows(i);
+			return;
+		}
+	}
 }
 
 void renderToSerial() {
@@ -231,18 +222,12 @@ void handleButtons() {
 		dropLast = millis();
 
 		dropBlock();
-
 	}
 
-	if(millis() - rotateLast > clickTime && rotateState) {
+	if(millis() - rotateLast > clickTime+100 && rotateState) {
 		rotateLast = millis();
 
-		//TODO collision checks
-		rotateSprite(&block, 1);
-
-		//Redraw moveblock
-		moveBlock(0, 0);
-
+		rotateBlock();
 	}
 }
 
@@ -270,7 +255,7 @@ void initDisplay() {
 
 //Draw a region, where mask specifies where to draw.
 //	xMask = 0b00111100, yMask = 0b01111110 will draw a small 4x6 box
-void drawSprite(uint8_t layer[], uint8_t x, uint8_t y, struct Sprite* sprite) {
+void drawSprite(uint8_t layer[], uint8_t x, uint8_t y, Sprite* sprite) {
 	//Check if in range
 	if (x + sprite->width - 1 > 7 || y + sprite->height - 1> 15 )
 		return;
@@ -278,7 +263,7 @@ void drawSprite(uint8_t layer[], uint8_t x, uint8_t y, struct Sprite* sprite) {
 	for ( int i = y; i < sprite->height + y; i++) {
 		//Calculate bits
 		uint8_t row = layer[i];
-		row |= sprite->buff[i - y + sprite->yOff] >> x - sprite->xOff;
+		row |= sprite->buff[i - y] >> x;
 		
 		layer[i] = row;
 
@@ -305,15 +290,26 @@ void drawRegion(uint8_t layer[], uint8_t xMask, uint16_t yMask, bool state) {
 	}
 }
 
+unsigned long reRenderLast;
+
 void render(int where) {
 
+	static uint8_t onScreen[16];
+
+	bool reRender = (millis() - reRenderLast ) > 1000;
+
 	for(int i = where; i < (where + 8); i++ ) {
+		uint8_t toWrite = buttonLayer[i] | topLayer[i];
+		if(onScreen[i] == toWrite && !reRender) 
+			continue;
+
 		writeCommand(maxDIGIT_0 + i - where, buttonLayer[i] | topLayer[i]);
+
+		onScreen[i] = toWrite;
 	}
-	
-	//Shift everything throught
-	for( int i = 0; i < curDisplay; i++) {
-		writeCommand(0, 0);
+
+	if(reRender) {
+		reRenderLast = millis();
 	}
 
 }
