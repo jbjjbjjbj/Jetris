@@ -27,3 +27,4 @@ void initSprites() {
 	lBlockD.rotateNext = &lBlockL;
 	lBlockL.rotateNext = &lBlock;
 }
+

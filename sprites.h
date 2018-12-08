@@ -190,3 +190,4 @@ struct Sprite lBlockL = {
 struct Sprite *blocks[] = { &iBlock, &oBlock, &tBlock, &sBlock, &zBlock, &jBlock, &lBlock };
 
 #endif
+
