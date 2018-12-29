@@ -18,7 +18,8 @@ void drawSprite(uint8_t layer[], uint8_t x, uint8_t y, struct Sprite* sprite);
 void clearBuffer(uint8_t layer[] );
 
 /* Screen interface commands */
-void render(uint8_t screenBuffer[], unsigned int where);
+void render(int display, unsigned int where);
+void renderToSerial();
 void initDisplays(int display);
 
 #endif

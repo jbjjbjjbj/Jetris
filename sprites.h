@@ -184,7 +184,7 @@ struct Sprite lBlockL = {
 		0b01000000,
 		0b01000000,
 		0b00000000,
-	}, 3, 2, NULL
+	}, 2, 3, NULL
 };
 
 struct Sprite *blocks[] = { &iBlock, &oBlock, &tBlock, &sBlock, &zBlock, &jBlock, &lBlock };

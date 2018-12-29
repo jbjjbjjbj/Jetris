@@ -31,7 +31,7 @@ void clearBuffer(uint8_t layer[] ) {
  *	device:	Which screen
  *	where:	It render the next 8 bytes from this index
  */
-void render(int device, uint8_t screenBuffer[], unsigned int where) {
+void render(int display, unsigned int where) {
 
 	static uint8_t onScreen[BUFF_HEIGHT];
 	static unsigned long reRenderLast;
@@ -44,13 +44,13 @@ void render(int device, uint8_t screenBuffer[], unsigned int where) {
 
 	/* Will draw 8 lines from /where/. */
 	for(i = where; i < (where + 8); i++) {
-		toWrite = screenbuffer[i];
+		toWrite = topLayer[i] | buttonLayer[i];
 
 		/* Check if whats on screen is the same */
 		if(onScreen[i] == toWrite && !reRender) 
 			continue;
 
-		writeCommand(device, maxDIGIT_0 + i - where, toWrite);
+		writeCommand(display, maxDIGIT_0 + i - where, toWrite);
 
 		/* Keep track of whats on screen */
 		onScreen[i] = toWrite;
@@ -61,8 +61,37 @@ void render(int device, uint8_t screenBuffer[], unsigned int where) {
 	
 }
 
+/* Renders all 16 bytes to screen */
+void renderToSerial() {
+	/* Send terminal clear characters(https://stackoverflow.com/questions/10105666/clearing-the-terminal-screen) */
+	Serial.write(27);
+	Serial.print("[2J");
+	Serial.write(27);
+	Serial.print("[H");
+
+	/* For every line */
+	for( int i = 0; i < 16; i++ ) {
+		uint8_t toWrite = topLayer[i] | buttonLayer[i];
+
+		/* For every bit in line */
+		for( int bit = 0; bit < 8; bit++) 
+			Serial.print( ( toWrite & ( 1 << 7 - bit ) ) > 0 );
+
+		Serial.println();
+		
+	}
+}
+
 /* Write a register to specified display */
 static void writeCommand(int display, uint8_t addr, uint8_t data) {
+	Serial.print("Writing byte ");
+	Serial.print(data);
+	Serial.print(" to addr ");
+	Serial.print(addr);
+	Serial.print(" on display ");
+	Serial.println(display);
+
+
 	/* Chip select low */
 	digitalWrite(CS, LOW);
 
@@ -73,7 +102,7 @@ static void writeCommand(int display, uint8_t addr, uint8_t data) {
 
 	/* If the device is number two, the commands should be shiftet through
 	 * Each MAX, holds 16 bits(2 bytes) */
-	serialPad(curDisplay * 2);
+	serialPad(display * 2);
 
 	digitalWrite(CS, HIGH);
 
@@ -84,14 +113,24 @@ static void writeCommand(int display, uint8_t addr, uint8_t data) {
 
 /* Init specified display */
 void initDisplays(int display) {
-	
+	/* Clear all registers */
+	for( int i = 0; i < 0x0F; i++)
+		writeCommand(display, i, 0);
+
+	/* Turn on(1 is shutdown disable) */
+	writeCommand(display, maxSHUTDOWN_INV, 1);
+
+	/* Darker please */
+	writeCommand(display, maxINTENSITY, 0x00);
+
+	/* Activate all lines */
+	writeCommand(display, maxSCAN_LIMIT, 0x07);
 }
 
-/* Send x amount of empty bytes, recursively(for fun)*/
+/* Send x amount of empty bytes */
 static void serialPad(int count) {
-	shiftOut(DATA_IN, CLK, MSBFIRST, 0);
-
-	if ( count )
-		serialPad(count-1);
+	for( int i = 0; i < count; i++ ) {
+		shiftOut(DATA_IN, CLK, MSBFIRST, 0);
+	}
 }
 
