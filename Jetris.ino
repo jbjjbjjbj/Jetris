@@ -5,13 +5,18 @@
 #define RIGHT_PIN	4
 #define DROP_PIN	11
 #define ROTATE_PIN	10
-#define CLICK_TIME	200
 
+#define CLICK_TIME	200
+#define FALL_TIME	300
+
+#define DEBUG_TO_SERIAL	 1
 #define RENDER_TO_SERIAL 0
 
 void setup() {
+#if DEBUG_TO_SERIAL == 1 or RENDER_TO_SERIAL == 1
 	Serial.begin(115200);
 	Serial.println("Starting \n\n");
+#endif
 
 	/* Prepare the random generator */
 	randomSeed( analogRead(0) );
@@ -31,6 +36,7 @@ void setup() {
 	initSprites();
 	initGame();
 
+
 }
 
 void loop() {
@@ -44,7 +50,7 @@ void loop() {
 
 struct Sprite *cur_block;
 
-int x_pos, y_pos;
+int x_pos, y_pos, score;
 
 void initGame() {
 	initBlock();
@@ -56,17 +62,28 @@ void gameLoop() {
 
 	handleButtons();
 
-	if( millis() - loop_time < 500) 
+	if( millis() - loop_time < FALL_TIME) 
 		return;
 	
 	/* Move the cur_block */
 	if( checkCollision(0, 1) ){
 		drawSprite(buttonLayer, x_pos, y_pos, cur_block);
 
+		/* Debug information */
+#if DEBUG_TO_SERIAL == 1
+		Serial.print("Writing block to ");
+		Serial.print(x_pos);
+		Serial.print(", ");
+		Serial.println(y_pos);
+#endif
+
 		/* Handle the rows, from the button */
 		handleFullRows(0);
 
-		initBlock();
+		/* If full end the game */
+		if( initBlock() )
+			endGame();
+
 		renderAll();
 	}else {
 		/* Free to move (one down)*/
@@ -76,10 +93,14 @@ void gameLoop() {
 	loop_time = millis();
 }
 
-void initBlock() {
-	x_pos = y_pos = 0;
-
+/* Makes a new block and returns 1 if full */
+int initBlock() {
 	cur_block = blocks[ random(7) ];
+
+	y_pos = 0;
+	x_pos = 4 - cur_block->width/2;
+
+	return checkCollision(0, 0);	
 }
 
 void moveBlock(int x_move, int y_move) {
@@ -106,7 +127,7 @@ int checkCollision(int xMove, int yMove) {
 	}
 
 	/* Check if border is hit */
-	if( xNew + cur_block->width > 8 || xNew < 0 || yNew + cur_block->height > 16 )
+	if( xNew + cur_block->width > 8 || xNew < 0 || yNew + cur_block->height > 16 || yNew < 0 )
 		return 1;
 	
 	return 0;
@@ -130,9 +151,6 @@ void dropBlock() {
 		/* Add delay to make falling effect */
 		delay(5);
 	}
-
-	/* Move to cur_block to the backlayer */
-	drawSprite(buttonLayer, x_pos, y_pos, cur_block);
 }
 
 /* Check and delete full rows(starting at `start`) */
@@ -145,9 +163,56 @@ void handleFullRows(int start) {
 			for( int j = i; j < 16; j++ ){
 				buttonLayer[15 - j] = buttonLayer[14 - j];
 			}
+
+			/* Increase score */
+			score++;
 		} else {
 			i++;
 		}
+	}
+}
+
+void endGame() {
+	/* Slowly clear screen */
+	for( int i = 0; i < 16; i++ ) {
+		buttonLayer[15 - i] = topLayer[15 - i] = 0;
+		renderAll();
+		delay(100);
+	}
+	
+	/* Fill button of screen with score */
+	int xFill = score % 8;
+	int yFill = score / 8;
+	int y = 0;
+#if DEBUG_TO_SERIAL == 1
+	Serial.print("Finished with score ");
+	Serial.println(score);
+#endif
+
+	for( y = 0; y < yFill; y++ ){
+		buttonLayer[15 - y] = 0xFF;
+	}
+	for( int x = 0; x < xFill; x++ ){
+		buttonLayer[15 - y] = buttonLayer[15 - y] | ( 1 << x );
+	}
+
+	/* Replicate the DVD gliding logo thing */
+
+	cur_block = &smiley;
+	/* Velocity */
+	int xV = 1, yV = 1;
+	y_pos = 3;
+
+	while(1){
+		if( checkCollision(xV, 0) ) {
+			xV *= -1;
+		}
+		if( checkCollision(0, yV) ) {
+			yV *= -1;
+		}
+
+		moveBlock(xV, yV);
+		delay(100);
 	}
 }
 
@@ -155,7 +220,6 @@ void handleFullRows(int start) {
 void renderAll() {
 #if RENDER_TO_SERIAL == 1
 	renderToSerial();
-	return;
 #endif
 
 	render(0, 0);

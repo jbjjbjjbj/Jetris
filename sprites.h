@@ -189,5 +189,15 @@ struct Sprite lBlockL = {
 
 struct Sprite *blocks[] = { &iBlock, &oBlock, &tBlock, &sBlock, &zBlock, &jBlock, &lBlock };
 
+/* End animation */
+struct Sprite smiley = {
+	{
+		0b10100000,
+		0b00000000,
+		0b11100000,
+		0b00100000,
+	}, 3, 4, NULL
+};
+
 #endif
 

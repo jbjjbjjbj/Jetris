@@ -84,14 +84,6 @@ void renderToSerial() {
 
 /* Write a register to specified display */
 static void writeCommand(int display, uint8_t addr, uint8_t data) {
-	Serial.print("Writing byte ");
-	Serial.print(data);
-	Serial.print(" to addr ");
-	Serial.print(addr);
-	Serial.print(" on display ");
-	Serial.println(display);
-
-
 	/* Chip select low */
 	digitalWrite(CS, LOW);
 
