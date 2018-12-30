@@ -82,7 +82,8 @@ void renderToSerial() {
 	}
 }
 
-/* Write a register to specified display */
+/* Write a register to specified display 
+ *  A static function is only available in this file */
 static void writeCommand(int display, uint8_t addr, uint8_t data) {
 	/* Chip select low */
 	digitalWrite(CS, LOW);

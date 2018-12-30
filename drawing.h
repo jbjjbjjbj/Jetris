@@ -2,11 +2,14 @@
 #ifndef drawing
 #define drawing
 
+/* Display settings */
 #define BUFF_HEIGHT   16
 #define REDRAW_TIME   1000
 #define NUM_DISPLAY   2
+
+/* Pin difinitions */
 #define CLK           5
-#define CS            6
+#define CS            12
 #define DATA_IN       3
 
 /* Layers */

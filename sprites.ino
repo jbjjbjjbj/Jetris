@@ -1,6 +1,8 @@
 #include "sprites.h"
 
 void initSprites() {
+	/* The sprites work by having a reference to the rotated block
+	 * Had some issues with linking them up i .h files, thus this is done here */
 	iBlock.rotateNext = &iBlockR;
 	iBlockR.rotateNext = &iBlock;
 

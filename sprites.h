@@ -11,8 +11,9 @@ struct Sprite {
 	struct Sprite *rotateNext;
 };
 
+void initSprites();
 
-
+/* The rotateNext reference is set up i the initSprite function */
 struct Sprite ball = {
 	{
 		0b11100000,
