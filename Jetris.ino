@@ -3,7 +3,7 @@
 
 /* Compile settings */
 #define DEBUG_TO_SERIAL	 1
-#define RENDER_TO_SERIAL 0
+#define RENDER_TO_SERIAL 1
 
 /* Pin definitions */
 #define LEFT_PIN	2
@@ -16,6 +16,7 @@
 #define CLICK_TIME	100
 #define FALL_TIME	500
 #define DIFF		0.98
+#define REDRAW_TIME   250
 
 void setup() {
 	Serial.begin(115200);
@@ -251,8 +252,14 @@ void renderAll() {
 	renderToSerial();
 #endif
 
-	render(0, 0);
-	render(1, 8);
+	static unsigned long reRenderLast;
+	bool reRender = (millis() - reRenderLast ) > REDRAW_TIME;
+
+	render(0, 0, reRender);
+	render(1, 8, reRender);
+
+	if( reRender ) 
+		reRenderLast = millis();
 }
 
 /* 

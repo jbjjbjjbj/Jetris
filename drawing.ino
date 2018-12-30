@@ -31,23 +31,19 @@ void clearBuffer(uint8_t layer[] ) {
  *	device:	Which screen
  *	where:	It render the next 8 bytes from this index
  */
-void render(int display, unsigned int where) {
+void render(int display, unsigned int where, bool clean) {
 
 	static uint8_t onScreen[BUFF_HEIGHT];
-	static unsigned long reRenderLast;
 
 	int i;
 	uint8_t toWrite;
-
-	/* Completely rerender every one second */
-	bool reRender = (millis() - reRenderLast ) > REDRAW_TIME;
 
 	/* Will draw 8 lines from /where/. */
 	for(i = where; i < (where + 8); i++) {
 		toWrite = topLayer[i] | buttonLayer[i];
 
 		/* Check if whats on screen is the same */
-		if(onScreen[i] == toWrite && !reRender) 
+		if(onScreen[i] == toWrite && !clean) 
 			continue;
 
 		writeCommand(display, maxDIGIT_0 + i - where, toWrite);
@@ -55,10 +51,6 @@ void render(int display, unsigned int where) {
 		/* Keep track of whats on screen */
 		onScreen[i] = toWrite;
 	}
-
-	if(reRender)
-		reRenderLast = millis();
-	
 }
 
 /* Renders all 16 bytes to screen */
