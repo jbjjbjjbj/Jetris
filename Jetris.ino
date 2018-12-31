@@ -152,16 +152,6 @@ int rotateBlock() {
 	moveBlock(0, 0);
 }
 
-void dropBlock() {
-	/* Move down until it hits something */
-	while( !checkCollision(0, 1, cur_block) ) {
-		moveBlock(0, 1);
-
-		/* Add delay to make falling effect */
-		delay(5);
-	}
-}
-
 /* Check and delete full rows(starting at `start`) */
 void handleFullRows(int start) {
 	int i = start;
